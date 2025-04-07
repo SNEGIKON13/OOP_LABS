@@ -1,8 +1,11 @@
 ﻿import json
-from shapes import Shape, Circle, Line, Rectangle
+from shapes.circle import Circle
+from shapes.line import Line
+from shapes.rectangle import Rectangle
+from shapes.factory import create_shape
 
 class Canvas:
-    def __init__(self, width=80, height=18):  # Изменено height с 24 на 18
+    def __init__(self, width=80, height=18):
         self.width = width
         self.height = height
         self.grid = [['.' for _ in range(width)] for _ in range(height)]
@@ -116,7 +119,7 @@ class Canvas:
                 self.shapes = []
                 self.next_id = 1
                 for shape_data in data:
-                    shape = Shape.from_dict(shape_data)
+                    shape = create_shape(shape_data)  # Используем create_shape вместо Shape.from_dict
                     self.add_shape(shape)
         except FileNotFoundError:
             raise FileNotFoundError(f"Error: File '{filename}' not found. Please check the filename.")

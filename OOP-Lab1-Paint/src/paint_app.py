@@ -1,7 +1,9 @@
 ﻿import os
 import time
 from canvas import Canvas
-from shapes import Circle, Line, Rectangle
+from shapes.circle import Circle
+from shapes.line import Line
+from shapes.rectangle import Rectangle
 from commands import AddShapeCommand, RemoveShapeCommand, MoveShapeCommand, SetBackgroundCommand, SetCharCommand
 
 class PaintApp:

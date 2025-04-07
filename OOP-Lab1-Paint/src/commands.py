@@ -1,5 +1,5 @@
 ﻿from canvas import Canvas
-from shapes import Shape
+from shapes.shape import Shape
 
 class Command:
     def execute(self):
