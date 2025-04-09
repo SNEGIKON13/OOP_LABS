@@ -2,6 +2,10 @@
 
 class Circle(Shape):
     def __init__(self, x, y, radius, char='*', fill_char=None):
+        if radius <= 0:
+            raise ValueError(f"Radius must be positive. You entered: {radius}")
+        if radius < 0:
+            raise ValueError(f"Radius must be non-negative. You entered: {radius}")
         super().__init__(char)
         self.x = x
         self.y = y

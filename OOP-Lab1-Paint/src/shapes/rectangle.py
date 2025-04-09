@@ -5,6 +5,8 @@ class Rectangle(Shape):
         super().__init__(border_char)
         self.x1, self.y1 = min(x1, x2), min(y1, y2)
         self.x2, self.y2 = max(x1, x2), max(y1, y2)
+        if self.x2 - self.x1 < 1 or self.y2 - self.y1 < 1:
+            raise ValueError("Rectangle must be at least 2x2 in size.")
         self.fill_char = fill_char
 
     def move(self, dx, dy):

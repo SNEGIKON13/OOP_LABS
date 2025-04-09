@@ -1,5 +1,4 @@
-﻿from shapes.shape import Shape
-from shapes.circle import Circle
+﻿from shapes.circle import Circle
 from shapes.line import Line
 from shapes.rectangle import Rectangle
 

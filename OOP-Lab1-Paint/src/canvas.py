@@ -32,6 +32,8 @@ class Canvas:
                 self.draw_rectangle(shape.x1, shape.y1, shape.x2, shape.y2, shape.char, shape.fill_char)
 
     def draw_circle(self, x, y, radius, char, fill_char=None):
+        if radius < 0:
+            return
         if fill_char:
             for dy in range(-radius, radius + 1):
                 for dx in range(-radius, radius + 1):
