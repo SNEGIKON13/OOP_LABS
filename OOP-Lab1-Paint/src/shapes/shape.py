@@ -1,31 +1,43 @@
-﻿class Shape:
+﻿from abc import ABC, abstractmethod
+
+class Shape(ABC):
     def __init__(self, char='*'):
-        self.id = None
+        self._validate_char(char, "char")
+        self._id = None
         self.char = char
 
-    def move(self, dx, dy):
-        raise NotImplementedError
+    @property
+    def id(self):
+        return self._id
 
-    def to_dict(self):
-        raise NotImplementedError
+    @id.setter
+    def id(self, value):
+        self._id = value
 
     @staticmethod
-    def from_dict(data):
-        # Локальные импорты внутри метода
-        from shapes.circle import Circle
-        from shapes.line import Line
-        from shapes.rectangle import Rectangle
+    def _validate_char(value, name, allow_empty=False):
+        if not isinstance(value, str):
+            raise ValueError(f"{name} должен быть строкой. Введено: {value}")
+        if not value and allow_empty:
+            return None
+        if not value:
+            raise ValueError(f"{name} не может быть пустым.")
+        if len(value) != 1:
+            raise ValueError(f"{name} должен быть одним символом. Введено: '{value}'")
+        return value
 
-        shape = None
-        if data['type'] == 'Circle':
-            shape = Circle.from_dict(data)
-        elif data['type'] == 'Line':
-            shape = Line.from_dict(data)
-        elif data['type'] == 'Rectangle':
-            shape = Rectangle.from_dict(data)
-        else:
-            raise ValueError(f"Unknown shape type: {data['type']}")
-        return shape
+    @abstractmethod
+    def move(self, dx, dy):
+        pass
 
+    @abstractmethod
+    def to_dict(self):
+        pass
+
+    @abstractmethod
+    def draw(self, canvas):
+        pass
+
+    @abstractmethod
     def __str__(self):
-        raise NotImplementedError
+        pass

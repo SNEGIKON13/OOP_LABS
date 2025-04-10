@@ -1,89 +1,46 @@
-﻿import json
+﻿from shapes.shape_factory import ShapeFactory
 from shapes.circle import Circle
 from shapes.line import Line
 from shapes.rectangle import Rectangle
-from shapes.factory import create_shape
 
 class Canvas:
     def __init__(self, width=80, height=18):
         self.width = width
         self.height = height
-        self.grid = [['.' for _ in range(width)] for _ in range(height)]
-        self.shapes = []
-        self.next_id = 1
-        self.background_char = '.'
+        self._grid = [['.' for _ in range(width)] for _ in range(height)]
+        self._shapes = []
+        self._next_id = 1
 
     def add_shape(self, shape):
-        shape.id = self.next_id
-        self.next_id += 1
-        self.shapes.append(shape)
+        if isinstance(shape, Circle):
+            if not (0 <= shape.x < self.width and 0 <= shape.y < self.height):
+                raise ValueError(f"Центр круга должен быть внутри холста (0-{self.width-1}, 0-{self.height-1}). Введено: ({shape.x}, {shape.y})")
+        elif isinstance(shape, Rectangle):
+            if not (0 <= shape.x1 < self.width and 0 <= shape.y1 < self.height and
+                    0 <= shape.x2 < self.width and 0 <= shape.y2 < self.height):
+                raise ValueError(f"Координаты прямоугольника должны быть внутри холста (0-{self.width-1}, 0-{self.height-1}). Введено: ({shape.x1}, {shape.y1}, {shape.x2}, {shape.y2})")
+        elif isinstance(shape, Line):
+            if not (0 <= shape.x1 < self.width and 0 <= shape.y1 < self.height and
+                    0 <= shape.x2 < self.width and 0 <= shape.y2 < self.height):
+                raise ValueError(f"Координаты линии должны быть внутри холста (0-{self.width-1}, 0-{self.height-1}). Введено: ({shape.x1}, {shape.y1}, {shape.x2}, {shape.y2})")
+        shape.id = self._next_id
+        self._shapes.append(shape)
+        self._next_id += 1
 
     def remove_shape(self, shape_id):
-        self.shapes = [s for s in self.shapes if s.id != shape_id]
+        self._shapes = [s for s in self._shapes if s.id != shape_id]
+
+    def get_shape_by_id(self, shape_id):
+        return next((s for s in self._shapes if s.id == shape_id), None)
 
     def render(self):
-        self.grid = [['.' for _ in range(self.width)] for _ in range(self.height)]
-        for shape in self.shapes:
-            if isinstance(shape, Circle):
-                self.draw_circle(shape.x, shape.y, shape.radius, shape.char, shape.fill_char)
-            elif isinstance(shape, Line):
-                self.draw_line(shape.x1, shape.y1, shape.x2, shape.y2, shape.char)
-            elif isinstance(shape, Rectangle):
-                self.draw_rectangle(shape.x1, shape.y1, shape.x2, shape.y2, shape.char, shape.fill_char)
+        self._grid = [['.' for _ in range(self.width)] for _ in range(self.height)]
+        for shape in self._shapes:
+            shape.draw(self)
 
-    def draw_circle(self, x, y, radius, char, fill_char=None):
-        if radius < 0:
-            return
-        if fill_char:
-            for dy in range(-radius, radius + 1):
-                for dx in range(-radius, radius + 1):
-                    if dx * dx + dy * dy <= radius * radius:
-                        px, py = x + dx, y + dy
-                        if 0 <= px < self.width and 0 <= py < self.height:
-                            self.grid[py][px] = fill_char
-        x_pos = radius
-        y_pos = 0
-        err = 0
-        while x_pos >= y_pos:
-            for dx, dy in [(x_pos, y_pos), (-x_pos, y_pos), (x_pos, -y_pos), (-x_pos, -y_pos),
-                           (y_pos, x_pos), (-y_pos, x_pos), (y_pos, -x_pos), (-y_pos, -x_pos)]:
-                px, py = x + dx, y + dy
-                if 0 <= px < self.width and 0 <= py < self.height:
-                    self.grid[py][px] = char
-            y_pos += 1
-            err += 1 + 2 * y_pos
-            if 2 * (err - x_pos) + 1 > 0:
-                x_pos -= 1
-                err += 1 - 2 * x_pos
-
-    def draw_line(self, x1, y1, x2, y2, char):
-        dx = abs(x2 - x1)
-        dy = abs(y2 - y1)
-        sx = 1 if x1 < x2 else -1
-        sy = 1 if y1 < y2 else -1
-        err = dx - dy
-        while True:
-            if 0 <= x1 < self.width and 0 <= y1 < self.height:
-                self.grid[y1][x1] = char
-            if x1 == x2 and y1 == y2:
-                break
-            e2 = 2 * err
-            if e2 > -dy:
-                err -= dy
-                x1 += sx
-            if e2 < dx:
-                err += dx
-                y1 += sy
-
-    def draw_rectangle(self, x1, y1, x2, y2, border_char, fill_char):
-        for x in range(x1, x2 + 1):
-            for y in range(y1, y2 + 1):
-                if x == x1 or x == x2 or y == y1 or y == y2:
-                    if 0 <= x < self.width and 0 <= y < self.height:
-                        self.grid[y][x] = border_char
-                elif fill_char:
-                    if 0 <= x < self.width and 0 <= y < self.height:
-                        self.grid[y][x] = fill_char
+    def set_pixel(self, y, x, char):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self._grid[y][x] = char
 
     def print_grid(self):
         col_nums = [' '] * (self.width + 3)
@@ -97,38 +54,40 @@ class Canvas:
         print(''.join(col_nums))
         for y in range(self.height):
             print(f'{y:2d} ', end='')
-            print(''.join(self.grid[y]))
-        print(f"Canvas size: {self.width}x{self.height}")
+            print(''.join(self._grid[y]))
+        print(f"Размер холста: {self.width}x{self.height}")
 
     def save(self, filename):
+        import json
         if not filename.endswith('.json'):
             filename += '.json'
         with open(filename, 'w') as f:
-            json.dump([shape.to_dict() for shape in self.shapes], f)
+            json.dump([shape.to_dict() for shape in self._shapes], f)
 
     def load(self, filename):
+        import json
         try:
             if not filename.endswith('.json'):
                 filename += '.json'
             with open(filename, 'r') as f:
                 data = json.load(f)
                 if not isinstance(data, list):
-                    raise ValueError("File content must be a list of shapes.")
+                    raise ValueError("Содержимое файла должно быть списком фигур.")
                 if not data:
-                    self.shapes = []
-                    self.next_id = 1
+                    self._shapes = []
+                    self._next_id = 1
                     return
-                self.shapes = []
-                self.next_id = 1
+                self._shapes = []
+                self._next_id = 1
                 for shape_data in data:
-                    shape = create_shape(shape_data)  # Используем create_shape вместо Shape.from_dict
+                    shape = ShapeFactory.from_dict(shape_data)
                     self.add_shape(shape)
         except FileNotFoundError:
-            raise FileNotFoundError(f"Error: File '{filename}' not found. Please check the filename.")
+            raise FileNotFoundError(f"Ошибка: Файл '{filename}' не найден.")
         except json.JSONDecodeError:
-            raise ValueError(f"Error: File '{filename}' contains invalid JSON. Please check the file content.")
+            raise ValueError(f"Ошибка: Файл '{filename}' содержит некорректный JSON.")
         except Exception as e:
-            raise Exception(f"Error: Failed to load file '{filename}'. Reason: {str(e)}")
+            raise Exception(f"Ошибка: Не удалось загрузить файл '{filename}'. Причина: {str(e)}")
 
     def list_shapes(self):
-        return [f"{s.id}: {s}" for s in self.shapes]
+        return [f"{s.id}: {s}" for s in self._shapes]

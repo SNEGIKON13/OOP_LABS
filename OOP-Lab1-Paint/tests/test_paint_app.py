@@ -5,9 +5,9 @@ from paint_app import PaintApp, AddShapeCommand, MoveShapeCommand, RemoveShapeCo
 
 @pytest.fixture
 def paint_app():
-    """Фикстура для создания PaintApp с холстом 10x10."""
+    """Фикстура для создания PaintApp с холстом 80x18."""
     app = PaintApp()
-    app.canvas = Canvas(10, 10)
+    app.canvas = Canvas(80, 18)
     return app
 
 def test_paint_app_draw_shape(paint_app):

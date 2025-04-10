@@ -4,8 +4,8 @@ from canvas import Canvas
 
 @pytest.fixture
 def empty_canvas():
-    """Фикстура для создания пустого холста 10x10."""
-    return Canvas(10, 10)
+    """Фикстура для создания пустого холста 80x18."""
+    return Canvas(80, 18)
 
 def test_circle_constructor():
     """Проверяем, что конструктор правильно устанавливает свойства."""
