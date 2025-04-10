@@ -1,5 +1,4 @@
-﻿from shapes.shape_factory import ShapeFactory
-from shapes.circle import Circle
+﻿from shapes.circle import Circle
 from shapes.line import Line
 from shapes.rectangle import Rectangle
 
@@ -10,6 +9,10 @@ class Canvas:
         self._grid = [['.' for _ in range(width)] for _ in range(height)]
         self._shapes = []
         self._next_id = 1
+
+    @property
+    def shapes(self):
+        return self._shapes
 
     def add_shape(self, shape):
         if isinstance(shape, Circle):
@@ -32,6 +35,10 @@ class Canvas:
 
     def get_shape_by_id(self, shape_id):
         return next((s for s in self._shapes if s.id == shape_id), None)
+
+    def clear_shapes(self):
+        self._shapes = []
+        self._next_id = 1
 
     def render(self):
         self._grid = [['.' for _ in range(self.width)] for _ in range(self.height)]
@@ -56,38 +63,6 @@ class Canvas:
             print(f'{y:2d} ', end='')
             print(''.join(self._grid[y]))
         print(f"Размер холста: {self.width}x{self.height}")
-
-    def save(self, filename):
-        import json
-        if not filename.endswith('.json'):
-            filename += '.json'
-        with open(filename, 'w') as f:
-            json.dump([shape.to_dict() for shape in self._shapes], f)
-
-    def load(self, filename):
-        import json
-        try:
-            if not filename.endswith('.json'):
-                filename += '.json'
-            with open(filename, 'r') as f:
-                data = json.load(f)
-                if not isinstance(data, list):
-                    raise ValueError("Содержимое файла должно быть списком фигур.")
-                if not data:
-                    self._shapes = []
-                    self._next_id = 1
-                    return
-                self._shapes = []
-                self._next_id = 1
-                for shape_data in data:
-                    shape = ShapeFactory.from_dict(shape_data)
-                    self.add_shape(shape)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Ошибка: Файл '{filename}' не найден.")
-        except json.JSONDecodeError:
-            raise ValueError(f"Ошибка: Файл '{filename}' содержит некорректный JSON.")
-        except Exception as e:
-            raise Exception(f"Ошибка: Не удалось загрузить файл '{filename}'. Причина: {str(e)}")
 
     def list_shapes(self):
         return [f"{s.id}: {s}" for s in self._shapes]

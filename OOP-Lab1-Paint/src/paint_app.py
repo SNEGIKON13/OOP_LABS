@@ -6,6 +6,7 @@ from command_manager import CommandManager
 from shapes.shape_factory import ShapeFactory
 from command_factory import CommandFactory
 from canvas import Canvas
+from canvas_file_manager import CanvasFileManager
 from shapes.circle import Circle
 from shapes.line import Line
 from shapes.rectangle import Rectangle
@@ -13,6 +14,7 @@ from shapes.rectangle import Rectangle
 class PaintApp:
     def __init__(self):
         self.canvas = Canvas(width=80, height=18)
+        self.file_manager = CanvasFileManager(self.canvas)
         self.console_view = ConsoleView()
         self.input_handler = InputHandler(self.console_view)
         self.command_manager = CommandManager()
@@ -121,7 +123,7 @@ class PaintApp:
             return
         dx = self.input_handler.get_int("Введите dx: ", -79, 79)
         dy = self.input_handler.get_int("Введите dy: ", -17, 17)
-        command = CommandFactory.create_move_shape_command(shape, dx, dy)
+        command = CommandFactory.create_move_shape_command(self.canvas, shape, dx, dy)
         self.command_manager.execute(command)
         self.console_view.add_message(f"Фигура с ID {shape_id} успешно перемещена на dx={dx}, dy={dy}.")
 
@@ -134,11 +136,11 @@ class PaintApp:
         if shape is None:
             self.console_view.add_message("Ошибка: Фигура с таким ID не найдена.")
             return
-        if not isinstance(shape, (Circle, Rectangle)):
+        if not hasattr(shape, 'set_background'):
             self.console_view.add_message("Ошибка: Только круги и прямоугольники поддерживают заливку.")
             return
         fill_char = self.input_handler.get_char("Введите символ заливки: ", allow_empty=False)
-        command = CommandFactory.create_set_background_command(shape, fill_char)
+        command = CommandFactory.create_set_background_command(self.canvas, shape, fill_char)
         self.command_manager.execute(command)
         self.console_view.add_message(f"Заливка для фигуры с ID {shape_id} установлена на '{fill_char}'.")
 
@@ -152,19 +154,19 @@ class PaintApp:
             self.console_view.add_message("Ошибка: Фигура с таким ID не найдена.")
             return
         new_char = self.input_handler.get_char("Введите новый символ: ", allow_empty=False)
-        command = CommandFactory.create_set_char_command(shape, new_char)
+        command = CommandFactory.create_set_char_command(self.canvas, shape, new_char)
         self.command_manager.execute(command)
         self.console_view.add_message(f"Символ для фигуры с ID {shape_id} установлен на '{new_char}'.")
 
     def _save(self):
         filename = self.input_handler.get_filename("Введите имя файла для сохранения: ")
-        self.canvas.save(filename)
+        self.file_manager.save(filename)
         self.console_view.add_message(f"Холст успешно сохранен в {filename}.json.")
 
     def _load(self):
         filename = self.input_handler.get_filename("Введите имя файла для загрузки: ")
         try:
-            self.canvas.load(filename)
+            self.file_manager.load(filename)
             self.canvas.render()
             self.console_view.add_message(f"Холст успешно загружен из {filename}.json.")
         except (FileNotFoundError, ValueError) as e:
