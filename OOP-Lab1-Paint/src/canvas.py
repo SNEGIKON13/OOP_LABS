@@ -10,6 +10,9 @@ class Canvas:
         self._shapes = []
         self._next_id = 1
 
+    def get_max_shape_id(self):
+        return self._next_id - 1 if self._next_id > 1 else 0
+
     @property
     def shapes(self):
         return self._shapes

@@ -100,27 +100,31 @@ class PaintApp:
         except ValueError as e:
             self.console_view.add_message(f"Ошибка: {str(e)}")
 
-    def _erase_shape(self):
+    def _get_shape_by_id(self, action):
         if not self.canvas.list_shapes():
-            self.console_view.add_message("Ошибка: Нет фигур для удаления.")
-            return
-        shape_id = self.input_handler.get_int("Введите ID фигуры для удаления: ", 1, self.canvas._next_id - 1)
-        if self.canvas.get_shape_by_id(shape_id) is None:
+            self.console_view.add_message(f"Ошибка: Нет фигур для {action}.")
+            return None
+        shape_id = self.input_handler.get_int(f"Введите ID фигуры для {action}: ", 1, self.canvas.get_max_shape_id())
+        shape = self.canvas.get_shape_by_id(shape_id)
+        if shape is None:
             self.console_view.add_message("Ошибка: Фигура с таким ID не найдена.")
+            return None
+        return shape, shape_id
+
+    def _erase_shape(self):
+        result = self._get_shape_by_id("удаления")
+        if result is None:
             return
+        shape, shape_id = result
         command = CommandFactory.create_remove_shape_command(self.canvas, shape_id)
         self.command_manager.execute(command)
         self.console_view.add_message(f"Фигура с ID {shape_id} успешно удалена.")
 
     def _move_shape(self):
-        if not self.canvas.list_shapes():
-            self.console_view.add_message("Ошибка: Нет фигур для перемещения.")
+        result = self._get_shape_by_id("перемещения")
+        if result is None:
             return
-        shape_id = self.input_handler.get_int("Введите ID фигуры для перемещения: ", 1, self.canvas._next_id - 1)
-        shape = self.canvas.get_shape_by_id(shape_id)
-        if shape is None:
-            self.console_view.add_message("Ошибка: Фигура с таким ID не найдена.")
-            return
+        shape, shape_id = result
         dx = self.input_handler.get_int("Введите dx: ", -79, 79)
         dy = self.input_handler.get_int("Введите dy: ", -17, 17)
         command = CommandFactory.create_move_shape_command(self.canvas, shape, dx, dy)
@@ -128,14 +132,10 @@ class PaintApp:
         self.console_view.add_message(f"Фигура с ID {shape_id} успешно перемещена на dx={dx}, dy={dy}.")
 
     def _set_background(self):
-        if not self.canvas.list_shapes():
-            self.console_view.add_message("Ошибка: Нет фигур для установки заливки.")
+        result = self._get_shape_by_id("установки заливки")
+        if result is None:
             return
-        shape_id = self.input_handler.get_int("Введите ID фигуры для установки заливки: ", 1, self.canvas._next_id - 1)
-        shape = self.canvas.get_shape_by_id(shape_id)
-        if shape is None:
-            self.console_view.add_message("Ошибка: Фигура с таким ID не найдена.")
-            return
+        shape, shape_id = result
         if not hasattr(shape, 'set_background'):
             self.console_view.add_message("Ошибка: Только круги и прямоугольники поддерживают заливку.")
             return
@@ -145,14 +145,10 @@ class PaintApp:
         self.console_view.add_message(f"Заливка для фигуры с ID {shape_id} установлена на '{fill_char}'.")
 
     def _set_shape_char(self):
-        if not self.canvas.list_shapes():
-            self.console_view.add_message("Ошибка: Нет фигур для установки символа.")
+        result = self._get_shape_by_id("установки символа")
+        if result is None:
             return
-        shape_id = self.input_handler.get_int("Введите ID фигуры для установки символа: ", 1, self.canvas._next_id - 1)
-        shape = self.canvas.get_shape_by_id(shape_id)
-        if shape is None:
-            self.console_view.add_message("Ошибка: Фигура с таким ID не найдена.")
-            return
+        shape, shape_id = result
         new_char = self.input_handler.get_char("Введите новый символ: ", allow_empty=False)
         command = CommandFactory.create_set_char_command(self.canvas, shape, new_char)
         self.command_manager.execute(command)
