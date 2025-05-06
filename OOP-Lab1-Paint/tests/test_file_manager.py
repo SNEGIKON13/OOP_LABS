@@ -1,6 +1,5 @@
-﻿import os
-from canvas_file_manager import CanvasFileManager
-from canvas import Canvas
+﻿from core.canvas_file_manager import CanvasFileManager
+from core.canvas import Canvas
 from shapes.circle import Circle
 
 def test_save_load(tmp_path):

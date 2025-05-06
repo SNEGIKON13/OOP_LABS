@@ -1,11 +1,18 @@
-﻿from shapes.shape import Shape
+﻿from .shape import Shape
+from .registry import ShapeRegistry
+
 
 class Circle(Shape):
-    def __init__(self, x, y, radius, char='*', fill_char=None):
+    def __init__(
+            self,
+            x: int,
+            y: int,
+            radius: int,
+            char: str = '*',
+            fill_char: str | None = None
+    ):
         if radius <= 0:
-            raise ValueError(f"Радиус должен быть положительным. Введено: {radius}")
-        if radius > 9:  # Ограничение для холста 80x18
-            raise ValueError(f"Радиус не должен превышать 9. Введено: {radius}")
+            raise ValueError(f"Радиус должен быть >0, а не {radius}")
         super().__init__(char)
         if fill_char is not None:
             self._validate_char(fill_char, "fill_char")
@@ -14,41 +21,69 @@ class Circle(Shape):
         self.radius = radius
         self.fill_char = fill_char
 
-    def move(self, dx, dy):
+    def move(self, dx: int, dy: int) -> None:
         self.x += dx
         self.y += dy
 
-    def set_background(self, fill_char):
-        self._validate_char(fill_char, "fill_char")
-        self.fill_char = fill_char
+    def to_dict(self) -> dict:
+        return {
+            'type': 'Circle',
+            'x': self.x,
+            'y': self.y,
+            'radius': self.radius,
+            'char': self.char,
+            'fill_char': self.fill_char,
+        }
 
-    def to_dict(self):
-        return {'type': 'Circle', 'x': self.x, 'y': self.y, 'radius': self.radius, 'char': self.char, 'fill_char': self.fill_char}
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Circle':
+        return cls(
+            data['x'], data['y'], data['radius'],
+            data.get('char', '*'),
+            data.get('fill_char')
+        )
 
-    def draw(self, canvas):
-        if self.radius <= 0:
-            return
+    def is_within_bounds(self, width: int, height: int) -> bool:
+        return (
+                self.radius <= self.x < width - self.radius and
+                self.radius <= self.y < height - self.radius
+        )
+
+    def draw(self, grid: list[list[str]]) -> None:
+        h = len(grid)
+        w = len(grid[0]) if h else 0
+
+        # заливка
         if self.fill_char:
             for dy in range(-self.radius, self.radius + 1):
                 for dx in range(-self.radius, self.radius + 1):
                     if dx * dx + dy * dy <= self.radius * self.radius:
                         px, py = self.x + dx, self.y + dy
-                        if 0 <= px < canvas.width and 0 <= py < canvas.height:
-                            canvas.set_pixel(py, px, self.fill_char)
-        x_pos = self.radius
-        y_pos = 0
-        err = 0
-        while x_pos >= y_pos:
-            for dx, dy in [(x_pos, y_pos), (-x_pos, y_pos), (x_pos, -y_pos), (-x_pos, -y_pos),
-                           (y_pos, x_pos), (-y_pos, x_pos), (y_pos, -x_pos), (-y_pos, -x_pos)]:
-                px, py = self.x + dx, self.y + dy
-                if 0 <= px < canvas.width and 0 <= py < canvas.height:
-                    canvas.set_pixel(py, px, self.char)
-            y_pos += 1
-            err += 1 + 2 * y_pos
-            if 2 * (err - x_pos) + 1 > 0:
-                x_pos -= 1
-                err += 1 - 2 * x_pos
+                        if 0 <= px < w and 0 <= py < h:
+                            grid[py][px] = self.fill_char
 
-    def __str__(self):
-        return f"Круг в ({self.x},{self.y}) с радиусом={self.radius}, символ='{self.char}', заливка='{self.fill_char}'"
+        # контур (алгоритм Брезенхэма)
+        x0, y0 = self.x, self.y
+        x = self.radius
+        y = 0
+        err = 0
+        while x >= y:
+            for sx, sy in ((x, y), (-x, y), (x, -y), (-x, -y), (y, x), (-y, x), (y, -x), (-y, -x)):
+                px, py = x0 + sx, y0 + sy
+                if 0 <= px < w and 0 <= py < h:
+                    grid[py][px] = self.char
+            y += 1
+            err += 1 + 2 * y
+            if 2 * (err - x) + 1 > 0:
+                x -= 1
+                err += 1 - 2 * x
+
+    def __str__(self) -> str:
+        return (
+            f"Circle(id={self.id}, center=({self.x},{self.y}), "
+            f"r={self.radius}, char='{self.char}', fill='{self.fill_char}')"
+        )
+
+
+# Автоматическая регистрация
+ShapeRegistry.register('Circle', Circle)

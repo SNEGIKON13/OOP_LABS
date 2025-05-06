@@ -1,4 +1,4 @@
-﻿from canvas import Canvas
+﻿from core.canvas import Canvas
 from shapes.circle import Circle
 
 def test_add_shape():
