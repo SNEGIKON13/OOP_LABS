@@ -1,7 +1,4 @@
-﻿import pytest
-
-
-class DummyView:
+﻿class DummyView:
     def __init__(self):
         self.messages = []
 

@@ -1,5 +1,6 @@
 ﻿from .shape import Shape
 from .registry import ShapeRegistry
+from collections import deque
 
 
 class Circle(Shape):
@@ -52,18 +53,12 @@ class Circle(Shape):
     def draw(self, grid: list[list[str]]) -> None:
         h = len(grid)
         w = len(grid[0]) if h else 0
-
-        # заливка
-        if self.fill_char:
-            for dy in range(-self.radius, self.radius + 1):
-                for dx in range(-self.radius, self.radius + 1):
-                    if dx * dx + dy * dy <= self.radius * self.radius:
-                        px, py = self.x + dx, self.y + dy
-                        if 0 <= px < w and 0 <= py < h:
-                            grid[py][px] = self.fill_char
-
-        # контур (алгоритм Брезенхэма)
         x0, y0 = self.x, self.y
+
+        # Множество для хранения клеток контура
+        contour_cells = set()
+
+        # Рисуем контур (алгоритм Брезенхэма)
         x = self.radius
         y = 0
         err = 0
@@ -72,11 +67,34 @@ class Circle(Shape):
                 px, py = x0 + sx, y0 + sy
                 if 0 <= px < w and 0 <= py < h:
                     grid[py][px] = self.char
+                    contour_cells.add((px, py))
             y += 1
             err += 1 + 2 * y
             if 2 * (err - x) + 1 > 0:
                 x -= 1
                 err += 1 - 2 * x
+
+        # Заливка с помощью BFS, начиная из центра
+        if self.fill_char and 0 <= x0 < w and 0 <= y0 < h and (x0, y0) not in contour_cells:
+            q = deque([(y0, x0)])
+            visited = {(y0, x0)}
+            while q:
+                cy, cx = q.popleft()
+                if grid[cy][cx] != self.char and grid[cy][cx] != self.fill_char:
+                    grid[cy][cx] = self.fill_char
+                for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    ny, nx = cy + dy, cx + dx
+                    if (0 <= nx < w and 0 <= ny < h and
+                            (nx, ny) not in contour_cells and
+                            (ny, nx) not in visited and
+                            grid[ny][nx] != self.char):
+                        q.append((ny, nx))
+                        visited.add((ny, nx))
+
+    def set_background(self, new_fill_char: str | None):
+        if new_fill_char is not None:
+            self._validate_char(new_fill_char, "fill_char")
+        self.fill_char = new_fill_char
 
     def __str__(self) -> str:
         return (
@@ -85,5 +103,4 @@ class Circle(Shape):
         )
 
 
-# Автоматическая регистрация
 ShapeRegistry.register('Circle', Circle)

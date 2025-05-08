@@ -1,7 +1,4 @@
-﻿import sys
-from io import StringIO
-
-import pytest
+﻿import pytest
 from view.console_view import ConsoleView
 
 

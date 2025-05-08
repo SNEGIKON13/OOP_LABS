@@ -63,6 +63,11 @@ class Rectangle(Shape):
                     if 0 <= x < w and 0 <= y < h:
                         grid[y][x] = self.fill_char
 
+    def set_background(self, new_fill_char: str | None):
+        if new_fill_char is not None:
+            self._validate_char(new_fill_char, "fill_char")
+        self.fill_char = new_fill_char
+
     def __str__(self) -> str:
         return (
             f"Rectangle(id={self.id}, "
